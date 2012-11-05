@@ -21,7 +21,7 @@ install_keyboard_handler:
   push ds
   push es
   ;blocking usage of interrupts
-  ;cli
+  cli
   ;initializing es to be 0 (int table is in 0th segment)
   xor ax, ax
   mov es, ax
@@ -39,7 +39,7 @@ install_keyboard_handler:
   mov [es:09h*4+2], cs
   mov cx, 200
   ;unblocking usage of interrupts
-  ;sti
+  sti
   pop es
   pop ds
   popa
@@ -54,15 +54,16 @@ keyboard_handler:
   mov ds, ax    
   
   ;get pressed letter or number to al
-  in ax, KBD
+  in al, KBD
   
   ;filtering if pressed
 
   ;converting to ascii
   mov bx, xlat_lowercase_table
   ;if it is not press scancode then ignore it
-  cmp ah, 080h
-  jz i_dont_want_it
+  mov ah, al
+  and ah, 080h
+  jnz i_dont_want_it
   
   xlat
   or al, al
