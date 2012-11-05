@@ -88,7 +88,7 @@ _open_file:
   mov dx, file_name
   int 21h
   jc ende
-  mov [file_handle], ax
+  mov [cs:file_handle], ax
   
   pop ds
   popa
@@ -110,7 +110,7 @@ _close_file:
   mov ax, cs
   mov ds, ax
   mov ah, 3eh
-  mov bx, [file_handle]
+  mov bx, [cs:file_handle]
   int 21h
   pop ds
   popa
@@ -124,8 +124,6 @@ _close_file:
 _write_to_file:
   pusha 
   push ds
-  mov al, 'c'
-  call _printc
   ;write to file
   ;DS:DX - buffer location
   ;CX - number of bytes to write to file
@@ -134,11 +132,19 @@ _write_to_file:
   mov ds, ax
   mov dx, veliki_kamion
   mov ah, 40h    ; function number
-  mov bx, [file_handle]
+  mov bx, [cs:file_handle]
   mov cx, 12
   int 21h 
+  jc greska
   ;reset buffer
-  mov word [buffer_size], 0
+  mov word [cs:buffer_size], 0
+  pop ds
+  popa
+  ret
+greska:
+  mov al, ah
+  add al, '0'
+  call _printc
   pop ds
   popa
   ret
