@@ -8,7 +8,7 @@ KBD equ 060h
 segment .code
 
 _main:
-;  call install_debug_realtime
+  call install_debug_realtime
   call install_keyboard_handler
 
   mov dx, 00fffh
@@ -61,14 +61,14 @@ keyboard_handler:
   ;converting to ascii
   mov bx, xlat_lowercase_table
   ;if it is not press scancode then ignore it
-  and ah, 080h
+  cmp ah, 080h
   jz i_dont_want_it
   
   xlat
   or al, al
   jz i_dont_want_it
   ;sync
-  call _printc
+  ;call _printc
   cli  
   ;working on it
   ;taking info about buffer
