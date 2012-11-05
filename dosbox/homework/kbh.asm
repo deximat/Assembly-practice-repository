@@ -8,9 +8,35 @@ KBD equ 060h
 segment .code
 
 _main:
-  call install_debug_realtime
-  call install_keyboard_handler
+  
 
+  call _open_file
+;  call _write_to_file
+
+  call install_flush_timer
+  
+
+  mov dx, 00fffh
+  mov ah, 31h
+  mov al, 0h
+  int 21h
+ ret
+
+  ;get file name from psp
+  mov al, 'a'
+  call _printc
+
+  call _open_file
+   mov al, 'a'
+  call _printc
+
+  call install_flush_timer
+ mov al, 'a'
+  call _printc
+ 
+  call install_keyboard_handler
+  call _write_to_file  
+  ret
   mov dx, 00fffh
   mov ah, 31h
   mov al, 0h
@@ -102,7 +128,7 @@ keyboard_handler:
   iret
 
 ;%include 'utils.asm'
-%include 'debug.asm'
+%include 'timer.asm'
 
 segment .data
 

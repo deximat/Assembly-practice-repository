@@ -62,6 +62,7 @@ nastavi:
   popa
   iret
 %include 'utils.asm'
+
 old_28h:
 old_28h_offset: dw 0
 old_28h_segment: dw 0
