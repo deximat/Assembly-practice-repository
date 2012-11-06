@@ -34,6 +34,32 @@ install_flush_timer:
   sti
   ret
 
+uninstall_flush_timer:
+  pusha
+  push ds
+  push es
+  cli
+  ;initialising ds - had a lot of problems with this, just to be sure
+  call set_ds_to_tsr
+
+  ;zero
+  xor ax, ax
+  ;putting es to 0
+  mov es, ax
+  ;restpring old 
+  ;segment
+
+  mov ax, [old_1ch_segment]
+  mov [es:1ch*4+2], ax
+  ;offset
+  mov ax, [old_1ch_offset]
+  mov [es:1ch*4], ax
+  pop es
+  pop ds
+  popa
+  sti
+  ret
+
 flush_timer:
   pusha
   push ds
@@ -47,7 +73,7 @@ flush_timer:
   mov ax, [time_unit]
   mov bx, DELAY*19 ;(19 or 20) * 55ms ~ 1 second, rounded because exact precision is hard to get
   cmp ax, bx
-  jne continue ; if this is 19-th increment we are doing some job
+  jne .continue ; if this is 19-th increment we are doing some job
 
   ;reset counter
   mov word [time_unit], 0
@@ -56,20 +82,22 @@ flush_timer:
   int 21h
   ;now we have flags adress inside ES:BX
   xor ax, ax ; setting to zero
-  cmp ax, [es:bx]
-;  jnz fail ; if this is different from zero then DOS is busy 
-success:
+  cmp al, [es:bx]
+  jnz .fail ; if this is different from zero then DOS is busy 
+.success:
   ;write to file
   ;DS:DX - buffer location
   ;CX - number of bytes to write to file
   ;BX - file handle
+  ;clear flag in case it was set second ago
+  mov [int_28h_flag], byte 0h
   call _write_to_file
-  jmp continue
-fail:
+  jmp .continue
+.fail:
   ;set flag need to write
   ;int 28h takes responsibility to finish job
-  
-continue:
+  mov [int_28h_flag], byte 1h 
+.continue:
   ;calling old int
   pushf
   call far word [old_1ch]
@@ -77,8 +105,6 @@ continue:
   pop ds
   popa
   iret
-
-%include 'utils.asm'
 
 old_1ch:
 old_1ch_offset: dw 0

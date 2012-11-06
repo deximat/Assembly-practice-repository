@@ -8,6 +8,25 @@
 ;_main:
 ;  call test_file
 ;   ret
+
+;==============================
+; prints ASCIIZ string on es:di
+;==============================
+
+_print_asciiz_string:
+   pusha
+   push ds
+   .loop:
+        mov al, [es:di] ; getChar from es:di location
+        call _printc
+        inc di
+        test al, al
+        jnz .loop    ; loop for a specified number of chars in cx
+   
+   pop ds
+   popa
+   ret
+
 ;==============================
 ;    debugMemoryLocation
 ;    cx = number of bytes
@@ -87,14 +106,14 @@ _open_file:
   mov cx, 0h
   mov dx, file_name
   int 21h
-  jc ende
+  jc .ende
   mov [cs:file_handle], ax
   
   pop ds
   popa
   ret
 
-ende:
+.ende:
   mov al, 'j'
   call _printc
   pop ds
@@ -124,30 +143,122 @@ _close_file:
 _write_to_file:
   pusha 
   push ds
+  mov ax, cs
+  mov ds, ax
+
+  xor ax, ax
+  cmp [file_handle], ax
+  jne .dont_open
+  call _open_file
+  mov al, 'o'
+  call _printc
+.dont_open:
+  mov al, 'w'
+  call _printc  
   ;write to file
   ;DS:DX - buffer location
   ;CX - number of bytes to write to file
   ;BX - file handle
-  mov ax, cs
-  mov ds, ax
-  mov dx, veliki_kamion
+  mov dx, buffer 
   mov ah, 40h    ; function number
-  mov bx, [cs:file_handle]
-  mov cx, 12
+  mov bx, [file_handle]
+  mov cx, [buffer_size]
   int 21h 
-  jc greska
+  jc .greska
   ;reset buffer
-  mov word [cs:buffer_size], 0
+  mov word [buffer_size], 0
   pop ds
   popa
   ret
-greska:
-  mov al, ah
+.greska:
+  
   add al, '0'
   call _printc
   pop ds
   popa
   ret
+;=================================
+; si contains offset adress of
+; start of first command line 
+;         parameter
+;=================================
+_get_command_line:
+  push ax
+  push cx
+  push di
+  push ds
+  
+  cld
+  mov cx, 0080h  ;max for rep*
+  mov di, 81h    ;start of command line in PSP.
+  mov al, ' '    ;skip character 
+  repe scasb     ;getting location of non space character, acctually one after it
+  dec di         ;so we are decreasing it to point on start of first parameter
+  mov si, di     ;save it to si
+  
+  mov     al, 0dh ;going on while we dont hit 0dh -> new line
+  repne   scasb   ;get location of new line character, accutally one after it 
+  mov byte [di-1], 0 ;making ACIIZ
+
+  pop ds
+  pop di
+  pop cx
+  pop ax
+  ret 
+
+;=====================================
+;       Takes ASCIIZ strings
+;       string1 = DS:DI
+;       string2 = ES:SI
+;       returns cmp flags
+;=====================================
+_str_equals:
+  pusha
+.loop:
+  mov al, [ds:di]
+  mov bl, [es:si]
+  
+  ;if reached end of string 1
+  test al, al
+  jz .check
+
+  ;if reached end of string 2
+  test bl, bl
+  jz .check
+
+  ;if we are not on the end of the string inc si and di
+  inc di
+  inc si
+  ;check if letters are same
+  cmp al, bl
+  je .loop
+  jmp .end
+  ;check if both strings on the end
+.check:
+
+  cmp al, bl 
+
+.end:
+  popa
+  ret
+
+;=========================================
+;          set_ds_uninstall
+;     sets ds on existing tsr
+;=========================================
+
+set_ds_to_tsr:
+  pusha
+  push es
+  xor ax, ax
+  mov es, ax
+  mov ax, [es:60h*4+2]
+  mov ds, ax
+  pop es
+  popa
+  ret
+  
+
 
 
 segment .data
@@ -161,8 +272,8 @@ xlat_lowercase_table:
     db  'asdfghjkl',0,  0,0
     db  0
     db  0, 'zxcvbnm', 0, 0 ,0
-    db  0, 0, 0, 0
+    db  0, 0, 0, 32
     times 70 db 0  
 veliki_kamion: db 'bio jedan veliki kamion crvene boje'
-file_name: db 'index.txt', 0
+file_name: db 'dfjslfs.txt', 0 
 file_handle: dw 0
