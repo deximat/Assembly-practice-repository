@@ -78,8 +78,6 @@ dos_handler:
   jne .skip_write
   ;clear flag
   mov [int_28h_flag], byte 0h
-  cmp [buffer_size], 0h
-  je .skip_write
   ;check DOS to see if it is safe to use DOS int
   mov ah, 34h
   int 21h

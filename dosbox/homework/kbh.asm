@@ -5,57 +5,6 @@
 
 KBD equ 060h
 
-_maina:
-   call _get_command_line
-   mov cx, 10
-   mov ax, cs
-   mov es, ax
-   mov di, si
-   call _debugMemory
-   mov si, baba 
-   call _str_equals
-   jne .incorrect
-   mov al, 'T'
-   call _printc
-   jmp .end   
-.incorrect:
-   mov al, 'N'
-   call _printc
-.end:
-   ret 
-;   call install_dos_handler
-;   call _open_file
-;   call _write_to_file
-;   ret
-  call install_flush_timer
-  call install_keyboard_handler  
-
-  mov dx, 00fffh
-  mov ah, 31h
-  mov al, 0h
-  int 21h
- ret
-
-  ;get file name from psp
-  mov al, 'a'
-  call _printc
-
-  call _open_file
-   mov al, 'a'
-  call _printc
-
-  ;call install_flush_timer
-  mov al, 'a'
-  call _printc
- 
-  call install_keyboard_handler
-  call _write_to_file  
-  ret
-  mov dx, 00fffh
-  mov ah, 31h
-  mov al, 0h
-  int 21h
- ret
 install_keyboard_handler:
   pusha
   push ds
@@ -134,7 +83,6 @@ keyboard_handler:
   or al, al
   jz .i_dont_want_it
   ;sync
-  ;call _printc
   cli  
   ;working on it
   ;taking info about buffer
@@ -167,12 +115,11 @@ keyboard_handler:
 
 segment .data
 
-baba: db 'babaraba'
 old_09h:
 old_09h_offset:  dw 0
 old_09h_segment: dw 0
 buffer_size: dw 0
-buffer: times 255 db 0
+buffer: times 1000 db 0
 
 
 

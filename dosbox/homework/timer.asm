@@ -77,6 +77,7 @@ flush_timer:
 
   ;reset counter
   mov word [time_unit], 0
+
   ;check DOS to see if it is safe to use DOS int
   mov ah, 34h
   int 21h

@@ -114,7 +114,7 @@ _open_file:
   ret
 
 .ende:
-  mov al, 'j'
+  mov al, 'G'
   call _printc
   pop ds
   popa
@@ -150,11 +150,8 @@ _write_to_file:
   cmp [file_handle], ax
   jne .dont_open
   call _open_file
-  mov al, 'o'
-  call _printc
-.dont_open:
-  mov al, 'w'
-  call _printc  
+ 
+.dont_open:  
   ;write to file
   ;DS:DX - buffer location
   ;CX - number of bytes to write to file
@@ -172,7 +169,7 @@ _write_to_file:
   ret
 .greska:
   
-  add al, '0'
+  add al, 'G'
   call _printc
   pop ds
   popa
@@ -275,5 +272,5 @@ xlat_lowercase_table:
     db  0, 0, 0, 32
     times 70 db 0  
 veliki_kamion: db 'bio jedan veliki kamion crvene boje'
-file_name: db 'dfjslfs.txt', 0 
+file_name: times 255 db 0 
 file_handle: dw 0
