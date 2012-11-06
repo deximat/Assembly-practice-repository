@@ -1,3 +1,10 @@
+;================================
+;          DOS HANDLER
+; takes responsibility of writing
+;  to file if timer was unable
+;   to write due bios was busy
+;================================
+
 segment .code 
 
 install_dos_handler:
@@ -5,13 +12,10 @@ install_dos_handler:
   push ds
   push es
   cli
-  ;writing keyboard buffer to file when dos is idle
+  ;writing keyboard buffer to file when dos is idle and flag is set
   ;we will do this using int 28h
   
-  ;initialising ds - had a lot of problems with this, just to be sure
-  mov al, 'b'
-  call _printc
- 
+  ;initialising ds - had a lot of problems with this, just to be sure 
   mov ax, cs
   mov ds, ax
   ;zero
@@ -28,19 +32,21 @@ install_dos_handler:
   ;installing new
   mov [es:28h*4], word dos_handler
   mov [es:28h*4+2], cs
+  
+  sti
   pop es
   pop ds
-  popa
-  sti 
+  popa 
   ret
+
 uninstall_dos_handler:
   pusha
   push ds
   push es
   cli
 
+  ; set ds to tsr segment to be able to get old int info
   call set_ds_to_tsr
-
   ;zero
   xor ax, ax
   ;putting es to 0
@@ -52,18 +58,18 @@ uninstall_dos_handler:
   ;segment
   mov ax, [old_28h_segment]
   mov [es:28h*4+2], ax
+  
+  sti
   pop es
   pop ds
   popa
-  sti
   ret
 
 dos_handler:
   pusha
   push ds
   push es
-  mov al, 'A'
-  call _printc
+  
   ;initialising ds - had a lot of problems with this, just to be sure
   mov ax, cs
   mov ds, ax
@@ -72,6 +78,8 @@ dos_handler:
   jne .skip_write
   ;clear flag
   mov [int_28h_flag], byte 0h
+  cmp [buffer_size], 0h
+  je .skip_write
   ;check DOS to see if it is safe to use DOS int
   mov ah, 34h
   int 21h
@@ -89,6 +97,7 @@ dos_handler:
   ;calling old int
   pushf
   call far word [old_28h]
+  
   pop es
   pop ds
   popa
@@ -98,5 +107,4 @@ dos_handler:
 old_28h:
 old_28h_offset: dw 0
 old_28h_segment: dw 0
-second: db 0
 int_28h_flag: db 0
