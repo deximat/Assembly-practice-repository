@@ -47,6 +47,7 @@ _main:
   ;mov al, 'S'
   ;call _printc
   ;uninstalling all installed ints
+  call set_ds_to_tsr
   call uninstall_keyboard_handler
   call uninstall_flush_timer
   call uninstall_dos_handler
